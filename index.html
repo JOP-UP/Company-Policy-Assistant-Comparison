@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Company Policy Assistant benchmark comparing rules-based search, LLM-only, and LLM with vector retrieval." />
+  <title>Company Policy Assistant — Method Comparison</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <div class="eyebrow">AI in Accounting and Business</div>
+      <h1>Company Policy Assistant</h1>
+      <p class="hero-copy">A controlled comparison of rules-based search, an LLM using the full policy database, and an LLM using vector retrieval.</p>
+      <div class="hero-meta">
+        <span>98 policies</span>
+        <span>4 validated questions</span>
+        <span>3 retrieval approaches</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <p class="kicker">Benchmark overview</p>
+          <h2>Results at a glance</h2>
+        </div>
+        <p class="section-note">Lower time and token usage are better. Accuracy reflects correct policy selection or correct refusal when the database contains no answer.</p>
+      </div>
+
+      <div class="metric-grid" id="metricGrid"></div>
+
+      <div class="table-wrap">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Correct handling</th>
+              <th>Avg. response time</th>
+              <th>Avg. LLM tokens</th>
+              <th>Unsupported answers</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <p class="kicker">Question-level comparison</p>
+          <h2>Compare each test</h2>
+        </div>
+        <div class="question-filter" id="questionFilter" aria-label="Question filter"></div>
+      </div>
+      <div id="questions"></div>
+    </section>
+
+    <section class="section analysis-section">
+      <p class="kicker">Comparison and preferred approach</p>
+      <h2>What the benchmark shows</h2>
+      <div class="analysis-copy">
+        <p>The rules-based method was extremely fast and used no LLM tokens, but it selected the wrong policy for the semantic question about working from Spain for three weeks. The LLM-only and LLM-with-vector approaches handled all four validated questions correctly, including the unsupported dog-in-office question. The LLM-only method required the complete 98-policy database in every prompt, producing an average of about 3,512 tokens per question, while the vector approach supplied only the top three retrieved policies and averaged about 350 LLM tokens.</p>
+        <p>The LLM-with-vector approach is preferred because it maintained the same observed answer quality as the LLM-only method while reducing average LLM token usage by about 90% and average LLM response time by about 21%. The rules-based approach remains useful as a cheap deterministic baseline, but its dependence on literal terms and manually defined synonyms makes it less reliable for paraphrased questions. No unsupported answer was observed in this four-question benchmark, so a larger test set would be needed before making a strong claim about hallucination frequency.</p>
+      </div>
+    </section>
+
+    <section class="section methodology">
+      <p class="kicker">Methodology</p>
+      <h2>How the methods differ</h2>
+      <div class="method-flow">
+        <article>
+          <span class="method-number">01</span>
+          <h3>Rules-based</h3>
+          <p>Question → keyword and synonym scoring → highest-scoring policy → exact policy text.</p>
+        </article>
+        <article>
+          <span class="method-number">02</span>
+          <h3>LLM only</h3>
+          <p>Question + all 98 policies → LLM → answer and relevant policy.</p>
+        </article>
+        <article>
+          <span class="method-number">03</span>
+          <h3>LLM + Vector</h3>
+          <p>Question embedding → top 3 semantic matches → question + retrieved policies → LLM.</p>
+        </article>
+      </div>
+      <div class="data-note">
+        <strong>Benchmark note:</strong> Four valid questions were available across the supplied LLM runs. One vector run contained a shell command instead of a policy question and was excluded. The block labelled “Rules based results” in the supplied console output duplicated the LLM-only results, so the rules-based outputs shown here were reproduced with the previously defined deterministic rules baseline against the same 98-policy CSV. Rules-based runtime is therefore a local Python benchmark; LLM and vector timings are the supplied API-call measurements.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <span>Company Policy Assistant Benchmark</span>
+      <span>Static site suitable for GitHub Pages</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
