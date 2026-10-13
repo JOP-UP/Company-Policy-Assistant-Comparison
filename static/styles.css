@@ -122,7 +122,6 @@ textarea {
 .ask-panel {
   position: relative;
   z-index: 2;
-  margin-top: -34px;
   padding: 30px;
   border: 1px solid var(--line);
   border-radius: 24px;
