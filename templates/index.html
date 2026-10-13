@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta
+    name="description"
+    content="Interactive comparison of rules-based, LLM-only, and LLM + vector policy assistants."
+  >
+  <title>Company Policy Assistant Comparison</title>
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='styles.css') }}"
+  >
+</head>
+
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <div class="eyebrow">AI in Accounting and Business</div>
+
+      <h1>
+        Company Policy
+        <span>Assistant</span>
+      </h1>
+
+      <p class="hero-copy">
+        Ask one policy question and compare how three approaches answer it:
+        deterministic rules, an LLM using all policies, and RAG using vector retrieval.
+      </p>
+
+      <div class="hero-meta">
+        <span>{{ policy_count }} policies</span>
+        <span>3 methods</span>
+        <span>Live comparison</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <nav class="page-tabs" aria-label="Website sections">
+      <button class="page-tab active" type="button" data-tab="live">Live Comparison</button>
+      <button class="page-tab" type="button" data-tab="benchmark">Benchmark Results</button>
+    </nav>
+
+    <div id="liveTab" class="tab-panel active">
+    <section class="ask-panel">
+      <div class="ask-copy">
+        <p class="kicker">Interactive benchmark</p>
+        <h2>Ask a company policy question</h2>
+        <p>
+          The same question is automatically sent through all three methods.
+        </p>
+      </div>
+
+      <form id="questionForm">
+        <label for="question" class="sr-only">
+          Company policy question
+        </label>
+
+        <textarea
+          id="question"
+          name="question"
+          rows="3"
+          maxlength="1000"
+          placeholder="Example: Can I work from Spain for three weeks?"
+          required
+        ></textarea>
+
+        <div class="form-bottom">
+          <div class="examples">
+            <button
+              class="example"
+              type="button"
+              data-question="Can I work from Spain for three weeks?"
+            >
+              Work from Spain
+            </button>
+
+            <button
+              class="example"
+              type="button"
+              data-question="How many vacation days do I get?"
+            >
+              Vacation days
+            </button>
+
+            <button
+              class="example"
+              type="button"
+              data-question="Do expenses over $500 need approval?"
+            >
+              Expense approval
+            </button>
+
+            <button
+              class="example"
+              type="button"
+              data-question="Can I bring my dog to the office?"
+            >
+              Unsupported question
+            </button>
+          </div>
+
+          <button
+            id="compareButton"
+            class="compare-button"
+            type="submit"
+          >
+            Compare approaches
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section
+      id="resultsSection"
+      class="results-section hidden"
+      aria-live="polite"
+    >
+      <div class="section-heading">
+        <div>
+          <p class="kicker">Live results</p>
+          <h2 id="resultQuestion"></h2>
+        </div>
+
+        <p class="method-note">
+          For LLM + Vector, displayed time and tokens cover the final LLM call only;
+          embedding and vector-retrieval usage are intentionally excluded.
+        </p>
+      </div>
+
+      <div
+        id="resultsGrid"
+        class="results-grid"
+      ></div>
+    </section>
+
+    <section class="methods-section">
+      <div class="section-heading">
+        <div>
+          <p class="kicker">Methods</p>
+          <h2>What each approach does</h2>
+        </div>
+      </div>
+
+      <div class="method-flow">
+        <article>
+          <span class="method-number">01</span>
+          <h3>Rules-based</h3>
+          <p>
+            The question is scored against policy titles, text, categories,
+            departments, numbers, and predefined synonyms. No LLM is used.
+          </p>
+        </article>
+
+        <article>
+          <span class="method-number">02</span>
+          <h3>LLM only</h3>
+          <p>
+            The question and all {{ policy_count }} policies are sent directly
+            to {{ llm_model }}. The model selects the policy and writes the answer.
+          </p>
+        </article>
+
+        <article>
+          <span class="method-number">03</span>
+          <h3>LLM + Vector</h3>
+          <p>
+            {{ embedding_model }} retrieves the three semantically closest
+            policies. Only those policies and the question are sent to
+            {{ llm_model }}. This is RAG.
+          </p>
+        </article>
+      </div>
+    </section>
+
+
+    </div>
+
+    <div id="benchmarkTab" class="tab-panel">
+      <section class="benchmark-section">
+        <div class="section-heading">
+          <div>
+            <p class="kicker">Pre-run benchmark</p>
+            <h2>Four-question comparison</h2>
+          </div>
+          <p class="method-note">
+            These are the recorded benchmark results used for the original comparison.
+            Rules-based results were reproduced from the deterministic baseline.
+          </p>
+        </div>
+
+        <div id="benchmarkSummary" class="benchmark-summary"></div>
+
+        <div class="benchmark-table-wrap">
+          <table class="benchmark-table">
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Rules-based</th>
+                <th>LLM only</th>
+                <th>LLM + Vector</th>
+              </tr>
+            </thead>
+            <tbody id="benchmarkTableBody"></tbody>
+          </table>
+        </div>
+
+        <div id="benchmarkCards" class="benchmark-cards"></div>
+      </section>
+
+      <section class="analysis-section">
+        <p class="kicker">Comparison and preferred approach</p>
+
+      <h2>Benchmark conclusion</h2>
+
+      <div class="analysis-copy">
+        <p>
+          The rules-based approach was the fastest in the benchmark because its
+          calculations were performed locally and programmatically, but it failed
+          the semantic question about working from Spain because the scoring rules
+          selected the wrong policy. More rules and synonyms could improve this
+          baseline, although that would also increase maintenance. Both LLM-based
+          approaches answered the tested questions correctly. The vector method
+          was slightly faster in the recorded LLM response times and used about
+          90% fewer LLM tokens, primarily because only the retrieved policies were
+          included in the prompt instead of the complete policy database.
+        </p>
+
+        <p>
+          The preferred approach is therefore LLM + Vector because it achieved
+          the same observed answer quality as LLM-only while being substantially
+          more token-efficient and more scalable as the policy database grows.
+          RAG also supplies a smaller, semantically relevant evidence set to the
+          LLM. The current benchmark did not show a higher hallucination rate for
+          the LLM-only method, so reliability beyond the tested questions should
+          be treated as a hypothesis rather than a demonstrated result.
+        </p>
+      </div>
+    </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <span>Company Policy Assistant Comparison</span>
+      <span>Interactive policy QA benchmark</span>
+    </div>
+  </footer>
+
+  <script
+    src="{{ url_for('static', filename='app.js') }}"
+    defer
+  ></script>
+</body>
+</html>
